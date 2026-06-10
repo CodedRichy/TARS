@@ -1,0 +1,16 @@
+services:
+  tars:
+    build: .
+    ports:
+      - "9119:9119"
+    volumes:
+      - tars-data:/data
+    environment:
+      - TARS_DATA_DIR=/data
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - TARS_TELEGRAM_TOKEN=${TARS_TELEGRAM_TOKEN:-}
+    restart: unless-stopped
+
+volumes:
+  tars-data:
