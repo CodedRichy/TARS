@@ -1,139 +1,72 @@
-<div align="center">
-
 # TARS
 
-**The first AI agent with a brain you can watch grow.**
+An AI agent framework in Python for people who want an assistant with persistent memory that talks to them over Telegram, email, an HTTP API or the terminal.
 
-A self-improving AI agent framework with persistent memory, multi-channel communication, and a learning loop that gets smarter with every interaction.
+## What it does
 
-[![Python 3.11+](https://img.shields.io/badge/python-3.11+-3776ab?style=flat-square&logo=python&logoColor=white)](https://python.org)
-[![License: MIT](https://img.shields.io/badge/license-MIT-22c55e?style=flat-square)](LICENSE)
-[![Tests](https://img.shields.io/badge/tests-306+-22c55e?style=flat-square)](#testing)
-
-</div>
-
----
-
-## What It Does
-
-TARS is an AI agent that remembers, learns, and operates across multiple channels -- Telegram, email (IMAP), HTTP API, and MCP. Unlike stateless chatbots, TARS maintains a persistent genome of learned behaviors, routes tasks through specialized tools, and continuously self-evaluates to improve.
+- Keeps what it learns about you in a SQLite store (the "genome"), so it remembers across restarts.
+- Takes messages from the CLI, Telegram, an IMAP inbox trigger and a FastAPI gateway.
+- Checks every request in a "doorman" layer (auth, rate limiting) before it reaches the agent.
+- Runs tools, and can connect to MCP servers through its MCP client.
+- Tracks its own performance over time (`tars curves`, `tars digest`) and ships an eval harness (`tars eval`).
+- Includes `tars doctor` for self-diagnostics.
 
 ```
-You (Telegram / Email / API / MCP)
-        │
-        ▼
-   ┌─────────┐     ┌──────────┐     ┌──────────┐
-   │ Doorman  │────▶│  Router  │────▶│  Agent   │
-   │ (Auth)   │     │ (Intent) │     │ (LiteLLM)│
-   └─────────┘     └──────────┘     └────┬─────┘
-                                         │
-                    ┌────────────────────┼────────────────────┐
-                    ▼                    ▼                    ▼
-              ┌──────────┐       ┌──────────┐        ┌──────────┐
-              │  Tools   │       │  Genome  │        │  Curves  │
-              │ (Actions)│       │ (Memory) │        │ (Learn)  │
-              └──────────┘       └──────────┘        └──────────┘
+You (Telegram / Email / API / CLI)
+        |
+   Doorman (auth) -> Router (intent) -> Agent (LiteLLM)
+                                          |
+                          Tools      Genome      Curves
+                        (actions)   (memory)   (learning)
 ```
 
-## Key Features
+## Status
 
-- **Multi-Channel** -- Telegram bot, email inbox monitoring (IMAP), HTTP API gateway, and MCP server. One agent, every surface.
-- **Persistent Genome** -- Learned behaviors, preferences, and context stored in SQLite. The agent remembers across restarts.
-- **Learning Curves** -- Self-evaluation loop that tracks performance and adjusts behavior over time.
-- **Tool System** -- Extensible plugin architecture for custom actions.
-- **Doorman Auth** -- Request validation and rate limiting before anything reaches the agent.
-- **Smart Router** -- Intent classification that routes messages to the right handler without explicit commands.
-- **Doctor** -- Self-diagnostics and health monitoring.
-- **Eval Harness** -- Built-in evaluation framework to measure agent quality.
+Working, pre-1.0. 306 test functions across unit, integration and end-to-end suites. The roadmap items not done yet: web dashboard for the genome, voice channel, multi-agent collaboration, embedding-based memory, plugin marketplace.
 
-## Quick Start
+## Stack
 
-### Prerequisites
+Python 3.11+, LiteLLM, Typer and Rich, FastAPI and Uvicorn, aiosqlite, python-telegram-bot, imapclient, Pydantic.
 
-- Python 3.11+
-- An LLM API key (any provider supported by [LiteLLM](https://docs.litellm.ai/))
-
-### Install
+## Run it
 
 ```bash
 git clone https://github.com/CodedRichy/TARS.git
 cd TARS
 pip install -e ".[dev]"
-```
-
-### Run
-
-```bash
-# CLI mode
-tars chat
-
-# Start all channels
-tars serve
-```
-
-## Architecture
-
-```
-src/tars/
-  agent/        Core agent loop and LLM interaction
-  channels/     Telegram, email (IMAP), HTTP adapters
-  cli/          Typer CLI interface
-  core/         Config, logging, base classes
-  curves/       Learning loop and self-improvement
-  doctor/       Self-diagnostics and health checks
-  doorman/      Authentication and rate limiting
-  eval/         Evaluation harness
-  gateway/      FastAPI HTTP API server
-  genome/       Persistent memory (SQLite)
-  mcp/          Model Context Protocol server
-  router/       Intent classification and routing
-  tools/        Extensible tool/plugin system
-```
-
-## Tech Stack
-
-| Component | Technology |
-|-----------|-----------|
-| **Runtime** | Python 3.11+ |
-| **LLM** | LiteLLM (any provider -- OpenAI, Anthropic, Groq, Ollama) |
-| **CLI** | Typer + Rich |
-| **API** | FastAPI + Uvicorn |
-| **Database** | aiosqlite (async SQLite) |
-| **Telegram** | python-telegram-bot |
-| **Email** | imapclient |
-| **Scheduling** | croniter + watchdog |
-| **Validation** | Pydantic |
-
-## Testing
-
-```bash
+tars chat      # terminal chat
+tars start     # start the daemon and channels
 pytest tests/ -v
-```
-
-306+ tests across unit, integration, and end-to-end suites.
-
-## Docker
-
-```bash
 docker compose up -d
 ```
 
-## Roadmap
+You need an API key for any provider LiteLLM supports (OpenAI, Anthropic, Groq, Ollama and others).
 
-- [ ] Web dashboard for genome visualization
-- [ ] Voice channel (Twilio)
-- [ ] Multi-agent collaboration
-- [ ] Embeddings-powered semantic memory
-- [ ] Plugin marketplace
+## Project structure
+
+```
+src/tars/
+  agent/      agent loop, planner, permissions
+  channels/   CLI and Telegram adapters
+  cli/        Typer commands
+  core/       config, database, events, logging
+  curves/     performance snapshots and digest
+  doctor/     health checks and fixes
+  doorman/    auth, rate limiting, triggers (including IMAP)
+  eval/       evaluation harness
+  gateway/    FastAPI HTTP API and daemon
+  genome/     persistent memory
+  mcp/        MCP client and bridge
+  review/     Sunday review
+  router/     intent routing
+  tools/      tool system
+tests/        unit, integration, e2e
+```
+
+## Contributing
+
+Issues and pull requests are welcome. Run `pytest tests/` before opening a PR.
 
 ## License
 
-[MIT](LICENSE)
-
----
-
-<div align="center">
-
-Built by [Rishi Praseeth Krishnan](https://rishipraseeth.in)
-
-</div>
+MIT. See LICENSE.
